@@ -18,7 +18,10 @@ public class SQLDataLoader {
                 if (line.startsWith("INSERT INTO")) {
                     String timestampString = line.substring(line.indexOf(", '") + 3, line.indexOf("', '"));
                     long timestamp = java.sql.Timestamp.valueOf(timestampString).getTime();
-                    List<String> sqls = sqlMap.getOrDefault(timestamp, new ArrayList<>());
+                    if (!sqlMap.containsKey(timestamp)) {
+                        sqlMap.put(timestamp, new ArrayList<>());
+                    }
+                    List<String> sqls = sqlMap.get(timestamp);
                     sqls.add(line);
                 }
                 counter++;

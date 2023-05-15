@@ -19,7 +19,7 @@ public class SimulationTest {
     public static HashMap<Long, List<String>> sqlMap = new HashMap<>();
     public static List<String> sqlString = new ArrayList<>();
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
+    public static void main(String[] args) throws ExecutionException, InterruptedException, SQLException {
 
 
         ArrayList<String> sqlStatements = new ArrayList<String>();
@@ -40,8 +40,16 @@ public class SimulationTest {
             for (int j = 0; j < Settings.TRANSACTION_SIZE.size(); j++) {
                 for (int k = 0; k < Settings.MPLS.size(); k++) {
 
-                    // create  connection pool
+                    // create connection pool and set isolation level
                     ConnectionPool connectionPool = ConnectionPool.getInstance(Settings.MPLS.get(k));
+                    Connection connection = null;
+                    try {
+                        connection = connectionPool.getConnection();
+                        connection.setTransactionIsolation(Settings.LEVELS.get(i));
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
                     //clean up database
                     SQLDataLoader.LoadSQL("Resources/schema/drop.sql", sqlString);
                     executeSql(sqlString, connectionPool, url, user, password);
@@ -57,7 +65,7 @@ public class SimulationTest {
                     long simulationBeginTime = System.currentTimeMillis();
                     // execute the task and get the ScheduledFuture instance
                     QueryScheduler queryScheduler = new QueryScheduler(connectionPool,
-                            simulationBeginTime, Settings.TRANSACTION_SIZE.get(j), Settings.LEVELS.get(i));
+                            simulationBeginTime, Settings.TRANSACTION_SIZE.get(j));
                     ScheduledFuture<?> scheduledFuture = scheduler.scheduleAtFixedRate(
                             queryScheduler, 0, Settings.PERIOD, TimeUnit.MILLISECONDS); // wait for the task to complete
                     scheduledFuture.get();
@@ -78,16 +86,12 @@ public class SimulationTest {
         private ConnectionPool connectionPool;
         private long simulationBeginTime;
         private int transactionSize;
-        private int isolationLevel;
-        private ScheduledExecutorService scheduler;
 
         public QueryScheduler(ConnectionPool connectionPool, long simulationBeginTime,
-                              int transactionSize, int isolationLevel) {
+                              int transactionSize) {
             this.connectionPool = connectionPool;
-            this.scheduler = scheduler;
             this.simulationBeginTime = simulationBeginTime;
             this.transactionSize = transactionSize;
-            this.isolationLevel = isolationLevel;
         }
 
         @Override

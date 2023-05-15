@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Set;
 
-import com.sun.xml.internal.ws.api.config.management.policy.ManagementAssertion;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 public class ConnectionPool {
