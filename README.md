@@ -1,6 +1,6 @@
 # CS223_P1
 
-UCI CS223 Winter 2020 Project 1
+UCI CS223 Spring 2023 Project 1
 
 - Install PostgreSQL for Windows.
     - Port should be set as 5432.
