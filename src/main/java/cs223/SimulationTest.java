@@ -17,7 +17,7 @@ public class SimulationTest {
     // key is timestamp and value is sqls
     // TODO: LOAD SQLS!
     public static HashMap<Long, List<String>> sqlMap = new HashMap<>();
-    public static List<String> sqlString = new ArrayList<>();
+    public static List<String> sqlString;
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, SQLException {
 
@@ -33,11 +33,7 @@ public class SimulationTest {
         sqlStatements.add("SET row_security = off;");
         sqlStatements.add("SET search_path = public, pg_catalog;");
 
-        //load matadata
-        ConnectionPool connectionPool = ConnectionPool.getInstance(1, url, user, password);
-        sqlString = new ArrayList<>();
-        SQLDataLoader.LoadSQL("Resources/data/low_concurrency/metadata.sql", sqlString);
-        executeSql(sqlString, connectionPool, url, user, password);
+
 
         SQLDataLoader.LoadSQL(Settings.OBSERVATION_DATASET_URL, sqlMap);
 
@@ -46,13 +42,19 @@ public class SimulationTest {
                 for (int k = 0; k < Settings.MPLS.size(); k++) {
 
                     // create connection pool and set isolation level
-                    connectionPool = ConnectionPool.getInstance(Settings.MPLS.get(k), url, user, password);
+                    ConnectionPool connectionPool = ConnectionPool.getInstance(Settings.MPLS.get(k), url, user, password);
 
                     //clean up database
+                    sqlString = new ArrayList<>();
                     SQLDataLoader.LoadSQL("Resources/schema/drop.sql", sqlString);
                     executeSql(sqlString, connectionPool, url, user, password);
                     sqlString = new ArrayList<>();
                     SQLDataLoader.LoadSQL("Resources/schema/create.sql", sqlString);
+                    executeSql(sqlString, connectionPool, url, user, password);
+
+                    //load matadata
+                    sqlString = new ArrayList<>();
+                    SQLDataLoader.LoadSQL("Resources/data/low_concurrency/metadata.sql", sqlString);
                     executeSql(sqlString, connectionPool, url, user, password);
 
                     //load sql settings
@@ -80,7 +82,7 @@ public class SimulationTest {
                     long simulationEndTime = System.currentTimeMillis();
                     System.out.println("Response time of the whole workload: " +
                             (long)(simulationEndTime - simulationBeginTime));
-                    Thread.sleep(1000);
+                    Thread.sleep(10000);
                 }
             }
         }
