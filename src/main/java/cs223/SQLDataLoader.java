@@ -26,7 +26,7 @@ public class SQLDataLoader {
                     sqls.add(line);
                 }
                 counter++;
-                if (counter > 10000) break;
+                if (counter > 500000) break;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,5 +56,7 @@ public class SQLDataLoader {
             e.printStackTrace();
         }
     }
+
+    // TODO: Another function to load queries for txt file to sqlMap
 }
 

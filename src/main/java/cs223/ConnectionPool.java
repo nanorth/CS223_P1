@@ -22,10 +22,10 @@ public class ConnectionPool {
             dataSource.setUrl(url);
             dataSource.setUsername(user);
             dataSource.setPassword(password);
-            dataSource.setInitialSize((int)MPL / 4);
+            dataSource.setInitialSize(0);
             dataSource.setMaxTotal(MPL);
-            dataSource.setMaxIdle((int)MPL / 2);
-            dataSource.setMinIdle((int)MPL / 4);
+            dataSource.setMaxIdle(0);
+            dataSource.setMinIdle(0);
         }
         return instance;
     }

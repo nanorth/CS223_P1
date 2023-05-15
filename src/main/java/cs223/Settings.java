@@ -20,16 +20,17 @@ public class Settings {
 //    public final static String PREPROCESSED_DATA_URL = "preprocessed/"; //Do not change
 //
 //    public static int TEST_RUNNING_TIME_SECS = 3;
-    public static List<Integer> MPLS = new ArrayList<Integer>(Arrays.asList(2, 5, 10, 20));
+    public static List<Integer> MPLS = new ArrayList<Integer>(Arrays.asList(1, 5, 10, 20));
 
-    public static List<Integer> TRANSACTION_SIZE = new ArrayList<Integer>(Arrays.asList(1, 4, 10, 25));
+    public static List<Integer> TRANSACTION_SIZE = new ArrayList<Integer>(Arrays.asList(1, 5, 10, 20, 40));
 
-    public static List<Integer> LEVELS = new ArrayList<>(Arrays.asList(Connection.TRANSACTION_READ_UNCOMMITTED,
+    public static List<Integer> LEVELS = new ArrayList<>(Arrays.asList(
+            Connection.TRANSACTION_READ_UNCOMMITTED,
             Connection.TRANSACTION_READ_COMMITTED,
             Connection.TRANSACTION_REPEATABLE_READ,
             Connection.TRANSACTION_SERIALIZABLE));
 
-    public static int PERIOD = 100; // simulation time step in millisecond
+    public static int PERIOD = 50; // simulation time step in millisecond
 
     public static String OBSERVATION_START_DATE = "2017-11-08 00:00:00"; // the earliest timestamp of observation insert info query
 

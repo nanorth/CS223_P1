@@ -15,7 +15,7 @@ public class SimulationTest {
     private static String password = "en129129";
 
     // key is timestamp and value is sqls
-    // TODO: LOAD SQLS!
+
     public static HashMap<Long, List<String>> sqlMap = new HashMap<>();
     public static List<String> sqlString;
 
@@ -79,17 +79,20 @@ public class SimulationTest {
 
                     scheduledFuture.cancel(true);
 
+                    // check if no connect active
+                    // TODO: INSERT can be executed 10^5/s on my PC. The speed of executing SQL on a PC is faster than the speed of inputting SQL. To cause a blockage, add the "select" SQL statement to sqlmap.
                     while (true) {
-                        if (connectionPool.dataSource.getNumActive() == 0) {
-                            // if all sql handled
+                        if (connectionPool.dataSource.getNumIdle() == 0 && connectionPool.dataSource.getNumActive() == 0) {
+                            // if all committed
                             break;
                         }
-                        Thread.sleep(500);
+                        Thread.sleep(50);
                     }
 
 
 
                     long simulationEndTime = System.currentTimeMillis();
+                    //TODO: PRINT TRX SIZE, ISO LEVEL, MPL
                     System.out.println("Response time of the whole workload: " +
                             (long)(simulationEndTime - simulationBeginTime));
                     Thread.sleep(1000);
@@ -198,6 +201,19 @@ public class SimulationTest {
             }
         }
     }
+    //TODO: following code is an example for detecting response time
+    /*List<Long> waitTimes = new ArrayList<>();
+    for (int i = 0; i < taskCount; i++) {
+        long startTime = System.currentTimeMillis();
+        Connection conn = dataSource.getConnection();
+        long endTime = System.currentTimeMillis();
+        waitTimes.add(endTime - startTime);
+        // Execute SQL
+        // ...
+        conn.close();
+    }
+    double avgWaitTime = waitTimes.stream().mapToLong(Long::longValue).average().orElse(Double.NaN);*/
+
 
 
 }
