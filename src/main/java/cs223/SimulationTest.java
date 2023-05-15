@@ -33,6 +33,12 @@ public class SimulationTest {
         sqlStatements.add("SET row_security = off;");
         sqlStatements.add("SET search_path = public, pg_catalog;");
 
+        //load matadata
+        ConnectionPool connectionPool = ConnectionPool.getInstance(1, url, user, password);
+        sqlString = new ArrayList<>();
+        SQLDataLoader.LoadSQL("Resources/data/low_concurrency/metadata.sql", sqlString);
+        executeSql(sqlString, connectionPool, url, user, password);
+
         SQLDataLoader.LoadSQL(Settings.OBSERVATION_DATASET_URL, sqlMap);
 
         for (int i = 0; i < Settings.LEVELS.size(); i++) {
@@ -40,14 +46,7 @@ public class SimulationTest {
                 for (int k = 0; k < Settings.MPLS.size(); k++) {
 
                     // create connection pool and set isolation level
-                    ConnectionPool connectionPool = ConnectionPool.getInstance(Settings.MPLS.get(k));
-                    Connection connection = null;
-                    try {
-                        connection = connectionPool.getConnection();
-                        connection.setTransactionIsolation(Settings.LEVELS.get(i));
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+                    connectionPool = ConnectionPool.getInstance(Settings.MPLS.get(k), url, user, password);
 
                     //clean up database
                     SQLDataLoader.LoadSQL("Resources/schema/drop.sql", sqlString);
@@ -55,6 +54,7 @@ public class SimulationTest {
                     sqlString = new ArrayList<>();
                     SQLDataLoader.LoadSQL("Resources/schema/create.sql", sqlString);
                     executeSql(sqlString, connectionPool, url, user, password);
+
                     //load sql settings
                     executeSql(sqlStatements, connectionPool, url, user, password);
 
@@ -64,10 +64,19 @@ public class SimulationTest {
                     long simulationBeginTime = System.currentTimeMillis();
                     // execute the task and get the ScheduledFuture instance
                     QueryScheduler queryScheduler = new QueryScheduler(connectionPool,
-                            simulationBeginTime, Settings.TRANSACTION_SIZE.get(j));
+                            simulationBeginTime, Settings.TRANSACTION_SIZE.get(j), Settings.LEVELS.get(i));
                     ScheduledFuture<?> scheduledFuture = scheduler.scheduleAtFixedRate(
-                            queryScheduler, 0, Settings.PERIOD, TimeUnit.MILLISECONDS); // wait for the task to complete
-                    scheduledFuture.get();
+                            queryScheduler, 0, Settings.PERIOD, TimeUnit.MILLISECONDS);
+
+                    // wait for the task to complete
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    scheduledFuture.cancel(true);
+
                     long simulationEndTime = System.currentTimeMillis();
                     System.out.println("Response time of the whole workload: " +
                             (long)(simulationEndTime - simulationBeginTime));
@@ -85,12 +94,14 @@ public class SimulationTest {
         private ConnectionPool connectionPool;
         private long simulationBeginTime;
         private int transactionSize;
+        private int isolationLevel;
 
         public QueryScheduler(ConnectionPool connectionPool, long simulationBeginTime,
-                              int transactionSize) {
+                              int transactionSize, int isolationLevel) {
             this.connectionPool = connectionPool;
             this.simulationBeginTime = simulationBeginTime;
             this.transactionSize = transactionSize;
+            this.isolationLevel = isolationLevel;
         }
 
         @Override
@@ -109,6 +120,7 @@ public class SimulationTest {
             PreparedStatement statement = null;
             try {
                 connection = connectionPool.getConnection();
+                connection.setTransactionIsolation(isolationLevel);
                 connection.setAutoCommit(false);
 
                 for (String sql : currentQueries) {
@@ -164,23 +176,14 @@ public class SimulationTest {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-        PreparedStatement preparedStatement = null;
-        try {
-            for (String query : sqlStatements) {
-                preparedStatement = connection.prepareStatement(query);
-                preparedStatement.executeUpdate();
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        try {
-            if (preparedStatement != null) {
-                preparedStatement.close();
-            }
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 

@@ -14,14 +14,14 @@ public class ConnectionPool {
     private ConnectionPool() {
     }
 
-    public static synchronized ConnectionPool getInstance(int MPL) {
+    public static synchronized ConnectionPool getInstance(int MPL, String url, String user, String password) {
         if (instance == null) {
             instance = new ConnectionPool();
             dataSource = new BasicDataSource();
-            dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-            dataSource.setUrl("jdbc:mysql://localhost:3306/mydb");
-            dataSource.setUsername("root");
-            dataSource.setPassword("password");
+            dataSource.setDriverClassName("org.postgresql.Driver");
+            dataSource.setUrl(url);
+            dataSource.setUsername(user);
+            dataSource.setPassword(password);
             dataSource.setInitialSize((int)MPL / 4);
             dataSource.setMaxTotal(MPL);
             dataSource.setMaxIdle((int)MPL / 2);
