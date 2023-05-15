@@ -1,5 +1,6 @@
 package cs223;
 
+import javax.print.DocFlavor;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,12 +17,13 @@ public class SimulationTest {
     // key is timestamp and value is sqls
     // TODO: LOAD SQLS!
     public static HashMap<Long, List<String>> sqlMap = new HashMap<>();
+    public static List<String> sqlString = new ArrayList<>();
 
     public static void postgresCleanUp() {
         try{
-            SQLDataLoader.RunSQLByLine("Resources/schema/drop.sql", sqlMap);
-            SQLDataLoader.RunSQLByLine("Resources/schema/create.sql", sqlMap);
-            SQLDataLoader.RunSQLByLine(Settings.METADATA_DATASET_URL, sqlMap);
+            SQLDataLoader.LoadSQL("Resources/schema/drop.sql", sqlString);
+            SQLDataLoader.LoadSQL("Resources/schema/create.sql", sqlString);
+            //SQLDataLoader.LoadSQLByLine(Settings.METADATA_DATASET_URL, sqlMap);
         } catch (Exception e) {
             //e.printStackTrace();
         }
@@ -29,18 +31,19 @@ public class SimulationTest {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 
-        String[] sqlStatements = {"SET statement_timeout = 0;",
-                "SET lock_timeout = 0;",
-                "SET idle_in_transaction_session_timeout = 0;",
-                "SET client_encoding = 'UTF8';",
-                "SET standard_conforming_strings = on;",
-                "SET check_function_bodies = false;",
-                "SET client_min_messages = warning;",
-                "SET row_security = off;",
-                "SET search_path = public, pg_catalog;"};
+        ArrayList<String> sqlStatements = new ArrayList<String>();
+        sqlStatements.add("SET statement_timeout = 0;");
+        sqlStatements.add("SET lock_timeout = 0;");
+        sqlStatements.add("SET idle_in_transaction_session_timeout = 0;");
+        sqlStatements.add("SET client_encoding = 'UTF8';");
+        sqlStatements.add("SET standard_conforming_strings = on;");
+        sqlStatements.add("SET check_function_bodies = false;");
+        sqlStatements.add("SET client_min_messages = warning;");
+        sqlStatements.add("SET row_security = off;");
+        sqlStatements.add("SET search_path = public, pg_catalog;");
 
 
-        SQLDataLoader.LoadSQLByLine(Settings.OBSERVATION_DATASET_URL, sqlMap);
+        SQLDataLoader.LoadSQL(Settings.OBSERVATION_DATASET_URL, sqlMap);
 
         for (int i = 0; i < Settings.LEVELS.size(); i++) {
             for (int j = 0; j < Settings.TRANSACTION_SIZE.size(); j++) {
@@ -147,7 +150,7 @@ public class SimulationTest {
     }
 
 
-    public static void executeSql(String[] sqlStatements, ConnectionPool connectionPool, String url, String user, String password) {
+    public static void executeSql(List<String> sqlStatements, ConnectionPool connectionPool, String url, String user, String password) {
         // set connection
         Connection connection = null;
         try {
