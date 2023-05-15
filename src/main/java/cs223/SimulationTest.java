@@ -19,17 +19,8 @@ public class SimulationTest {
     public static HashMap<Long, List<String>> sqlMap = new HashMap<>();
     public static List<String> sqlString = new ArrayList<>();
 
-    public static void postgresCleanUp() {
-        try{
-            SQLDataLoader.LoadSQL("Resources/schema/drop.sql", sqlString);
-            SQLDataLoader.LoadSQL("Resources/schema/create.sql", sqlString);
-            //SQLDataLoader.LoadSQLByLine(Settings.METADATA_DATASET_URL, sqlMap);
-        } catch (Exception e) {
-            //e.printStackTrace();
-        }
-    }
-
     public static void main(String[] args) throws ExecutionException, InterruptedException {
+
 
         ArrayList<String> sqlStatements = new ArrayList<String>();
         sqlStatements.add("SET statement_timeout = 0;");
@@ -48,8 +39,16 @@ public class SimulationTest {
         for (int i = 0; i < Settings.LEVELS.size(); i++) {
             for (int j = 0; j < Settings.TRANSACTION_SIZE.size(); j++) {
                 for (int k = 0; k < Settings.MPLS.size(); k++) {
+
                     // create  connection pool
                     ConnectionPool connectionPool = ConnectionPool.getInstance(Settings.MPLS.get(k));
+                    //clean up database
+                    SQLDataLoader.LoadSQL("Resources/schema/drop.sql", sqlString);
+                    executeSql(sqlString, connectionPool, url, user, password);
+                    sqlString = new ArrayList<>();
+                    SQLDataLoader.LoadSQL("Resources/schema/create.sql", sqlString);
+                    executeSql(sqlString, connectionPool, url, user, password);
+                    //load sql settings
                     executeSql(sqlStatements, connectionPool, url, user, password);
 
 
