@@ -33,7 +33,6 @@ public class SimulationTest {
         sqlStatements.add("SET row_security = off;");
         sqlStatements.add("SET search_path = public, pg_catalog;");
 
-
         SQLDataLoader.LoadSQL(Settings.OBSERVATION_DATASET_URL, sqlMap);
 
         for (int i = 0; i < Settings.LEVELS.size(); i++) {

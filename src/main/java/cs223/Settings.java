@@ -31,6 +31,10 @@ public class Settings {
 
     public static int PERIOD = 100; // simulation time step in millisecond
 
+    public static String OBSERVATION_START_DATE = "2017-11-08 00:00:00"; // the earliest timestamp of observation insert info query
+
+    public static int TIME_SCALE_RATIO = 1440; // use this to scale 20 days to 20 minutes
+
     public static long SIMULATION_LENGTH = 120000; // in millisecond
 
     public static String SEMANTIC_DATASET_URL = "Resources/data/low_concurrency/semantic_observation_low_concurrency.sql";
