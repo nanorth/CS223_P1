@@ -79,10 +79,20 @@ public class SimulationTest {
 
                     scheduledFuture.cancel(true);
 
+                    while (true) {
+                        if (connectionPool.dataSource.getNumActive() == 0) {
+                            // if all sql handled
+                            break;
+                        }
+                        Thread.sleep(500);
+                    }
+
+
+
                     long simulationEndTime = System.currentTimeMillis();
                     System.out.println("Response time of the whole workload: " +
                             (long)(simulationEndTime - simulationBeginTime));
-                    Thread.sleep(10000);
+                    Thread.sleep(1000);
                 }
             }
         }

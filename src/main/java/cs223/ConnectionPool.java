@@ -9,7 +9,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 public class ConnectionPool {
 
     private static ConnectionPool instance = null;
-    private static BasicDataSource dataSource = null;
+    public static BasicDataSource dataSource = null;
 
     private ConnectionPool() {
     }
