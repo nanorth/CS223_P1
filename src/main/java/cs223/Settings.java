@@ -20,7 +20,7 @@ public class Settings {
 //    public final static String PREPROCESSED_DATA_URL = "preprocessed/"; //Do not change
 //
 //    public static int TEST_RUNNING_TIME_SECS = 3;
-    public static List<Integer> MPLS = new ArrayList<Integer>(Arrays.asList(1, 5, 10, 20));
+    public static List<Integer> MPLS = new ArrayList<Integer>(Arrays.asList(1, 5, 10, 40, 100));
 
     public static List<Integer> TRANSACTION_SIZE = new ArrayList<Integer>(Arrays.asList(1, 5, 10, 20, 40));
 
@@ -30,13 +30,13 @@ public class Settings {
             Connection.TRANSACTION_REPEATABLE_READ,
             Connection.TRANSACTION_SERIALIZABLE));
 
-    public static int PERIOD = 50; // simulation time step in millisecond
+    public static int PERIOD = 100; // simulation time step in millisecond
 
     public static String OBSERVATION_START_DATE = "2017-11-08 00:00:00"; // the earliest timestamp of observation insert info query
 
     public static int TIME_SCALE_RATIO = 1440; // use this to scale 20 days to 20 minutes
 
-    public static long SIMULATION_LENGTH = 120000; // in millisecond
+    public static long SIMULATION_LENGTH = 60000; // in millisecond
 
     public static String SEMANTIC_DATASET_URL = "Resources/data/low_concurrency/semantic_observation_low_concurrency.sql";
 

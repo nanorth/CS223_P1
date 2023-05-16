@@ -26,6 +26,7 @@ public class ConnectionPool {
             dataSource.setMaxTotal(MPL);
             dataSource.setMaxIdle(0);
             dataSource.setMinIdle(0);
+            dataSource.setMaxWaitMillis(5000);
         }
         return instance;
     }
