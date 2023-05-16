@@ -1,14 +1,11 @@
 package cs223;
 
-import javax.print.DocFlavor;
 import java.sql.*;
-import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 public class SimulationTest {
 
@@ -23,7 +20,7 @@ public class SimulationTest {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, SQLException {
         Settings.switch_to_high_concurrency();
-        ArrayList<String> sqlStatements = new ArrayList<String>();
+        /*ArrayList<String> sqlStatements = new ArrayList<String>();
         sqlStatements.add("SET statement_timeout = 0;");
         sqlStatements.add("SET lock_timeout = 0;");
         sqlStatements.add("SET idle_in_transaction_session_timeout = 0;");
@@ -32,7 +29,7 @@ public class SimulationTest {
         sqlStatements.add("SET check_function_bodies = false;");
         sqlStatements.add("SET client_min_messages = warning;");
         sqlStatements.add("SET row_security = off;");
-        sqlStatements.add("SET search_path = public, pg_catalog;");
+        sqlStatements.add("SET search_path = public, pg_catalog;");*/
 
 
 
@@ -40,11 +37,18 @@ public class SimulationTest {
         SQLDataLoader.LoadSQL(Settings.SEMANTIC_DATASET_URL, sqlMap);
         SQLDataLoader.LoadQueries(Settings.QUERY_DATA_URL, sqlMap);
 
+
+        for (List<String> curSQL : sqlMap.values()) {
+            Statistic.sqlSize += curSQL.size();
+        }
+
+        System.out.println(Statistic.sqlSize);
         for (int i = 0; i < Settings.LEVELS.size(); i++) {
             System.out.println("Isolation Level" + Settings.LEVELS.get(i));
             for (int j = 0; j < Settings.TRANSACTION_SIZE.size(); j++) {
                 System.out.println("Transaction size" + Settings.TRANSACTION_SIZE.get(j));
                 for (int k = 0; k < Settings.MPLS.size(); k++) {
+                    Statistic.totalResponseTime = 0;
                     // create connection pool and set isolation level
                     ConnectionPool connectionPool = ConnectionPool.getInstance(Settings.MPLS.get(k), url, user, password);
 
@@ -78,15 +82,15 @@ public class SimulationTest {
                                 simulationBeginTime, Settings.TRANSACTION_SIZE.get(j), Settings.LEVELS.get(i),
                                 temp * Settings.PERIOD, ThreadPoolSize);
                         int finalTemp = temp;
-                        scheduledFutures[temp] = scheduler.scheduleWithFixedDelay(
+                        scheduledFutures[temp] = scheduler.scheduleAtFixedRate(
                                 () -> {
                                     schedulerList[finalTemp].run();
                                     latch.countDown();
                                 }, 0, Settings.PERIOD * ThreadPoolSize, TimeUnit.MILLISECONDS);
-                        Thread.sleep(Settings.PERIOD);
+                        //Thread.sleep(Settings.PERIOD);
                     }
 
-
+                    System.out.println(System.currentTimeMillis() - simulationBeginTime);
                     try {
                         latch.await();
                     } catch (InterruptedException e) {
@@ -95,7 +99,18 @@ public class SimulationTest {
                     for (ScheduledFuture<?> scheduledFuture : scheduledFutures) {
                         scheduledFuture.cancel(true);
                     }
+                    System.out.println(System.currentTimeMillis() - simulationBeginTime);
+
                     scheduler.shutdown();
+
+                    while(true) {
+                        if (ConnectionPool.dataSource.getNumActive() == 0) {
+                            break;
+                        }
+                        Thread.sleep(100);
+                    }
+
+                    System.out.println(System.currentTimeMillis() - simulationBeginTime);
                     //for test
                     /*List<String> test = new ArrayList<>();
                     test.add("SELECT ci.INFRASTRUCTURE_ID \n" +
@@ -104,9 +119,14 @@ public class SimulationTest {
                     executeSql(test, connectionPool, url, user, password);*/
 
                     long simulationEndTime = System.currentTimeMillis();
-                    //TODO: PRINT TRX SIZE, ISO LEVEL, MPL
+                    long totalTime = simulationEndTime - simulationBeginTime;
                     System.out.println("MPL:" + Settings.MPLS.get(k) +" Response time of the whole workload: " +
-                            (long)(simulationEndTime - simulationBeginTime));
+                            totalTime + "ms");
+
+                    System.out.println("Transaction per second: " + ((Statistic.sqlSize / Settings.TRANSACTION_SIZE.get(j)) / (totalTime / 1000.0)) + "/s");
+                    System.out.println("Total sqls: " + Statistic.sqlSize);
+                    System.out.println("Total response time: " + Statistic.totalResponseTime + "ms");
+                    System.out.println("Avg response time: " + ((Statistic.totalResponseTime * 1.0) / Statistic.sqlSize ) + "ms");
                     Thread.sleep(10000);
                 }
             }
@@ -137,9 +157,8 @@ public class SimulationTest {
 
         @Override
         public void run() {
-            //System.out.println("task schedule at:");
-            //System.out.println(System.currentTimeMillis() - simulationBeginTime);
             // get all sql during current time period
+
             List<String> currentQueries = new ArrayList<>();
 
             for (long i = counter; i < counter + Settings.PERIOD; i++) {
@@ -148,15 +167,16 @@ public class SimulationTest {
                     currentQueries.add(sql);
                 }
             }
-            //System.out.println(currentQueries.size());
             counter += Settings.PERIOD * ThreadPoolSize;
             int currentQueryCount = 0;
             Connection connection = null;
             PreparedStatement statement = null;
+            long startTime = 0;
             try {
+                //System.out.println("waiting at: " + (System.currentTimeMillis() - simulationBeginTime));
                 connection = connectionPool.getConnection();
-                //System.out.println("task get connection at:");
-                //System.out.println(System.currentTimeMillis() - simulationBeginTime);
+                startTime = System.currentTimeMillis();
+                //System.out.println("start at: " + (startTime - simulationBeginTime));
                 connection.setTransactionIsolation(isolationLevel);
                 connection.setAutoCommit(false);
                 for (String sql : currentQueries) {
@@ -177,18 +197,24 @@ public class SimulationTest {
                 }
 
                 connection.commit();
+
             } catch (SQLException e) {
                 try {
                     if (connection != null) {
                         connection.rollback();
                     }
                 } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
             } finally {
                 try {
                     if (connection != null) {
                         connection.setAutoCommit(true);
                         connection.close();
+                        long endTime = System.currentTimeMillis();
+
+                        Statistic.totalResponseTime += (endTime - startTime);
+                        //System.out.println("responseTime: " + (endTime - startTime));
                     }
                     if (statement != null) {
                         statement.close();

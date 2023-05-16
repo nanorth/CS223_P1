@@ -35,7 +35,7 @@ public class SQLDataLoader {
                     }
                     List<String> sqls = sqlMap.get(timestamp);
                     sqls.add(line);
-                    if (timestamp > 60000) {
+                    if (timestamp > Settings.SIMULATION_LENGTH) {
                         if (counter++ > 100)
                             break;
                     }
@@ -90,7 +90,7 @@ public class SQLDataLoader {
                         sqlMap.put(timestamp, sqlList);
                     }
                     sqlString = "";
-                    if (timestamp > 60000) {
+                    if (timestamp > Settings.SIMULATION_LENGTH) {
                         if (counter++ > 10)
                             break;
                     }
