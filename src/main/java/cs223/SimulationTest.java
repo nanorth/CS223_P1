@@ -183,9 +183,7 @@ public class SimulationTest {
                         connection.rollback();
                     }
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
                 }
-                e.printStackTrace();
             } finally {
                 try {
                     if (connection != null) {
@@ -196,7 +194,6 @@ public class SimulationTest {
                         statement.close();
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
                 }
             }
 

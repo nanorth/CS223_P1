@@ -7,19 +7,6 @@ import java.util.List;
 
 public class Settings {
 
-//    public static int MPL = 10;
-//
-//
-//
-//    public static int ISOLATION_LEVEL = Connection.TRANSACTION_SERIALIZABLE;
-//
-//    public static int INTERVAL_BETWEEN_TIME_UNIT = 1000; // Do not change
-//
-//    public static boolean DO_NOT_GROUP_DATA_OPERATIONS = false;
-//
-//    public final static String PREPROCESSED_DATA_URL = "preprocessed/"; //Do not change
-//
-//    public static int TEST_RUNNING_TIME_SECS = 3;
     public static List<Integer> MPLS = new ArrayList<Integer>(Arrays.asList(1, 5, 10, 40, 100));
 
     public static List<Integer> TRANSACTION_SIZE = new ArrayList<Integer>(Arrays.asList(1, 5, 10, 20, 40));
