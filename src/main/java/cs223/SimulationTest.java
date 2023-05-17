@@ -90,13 +90,16 @@ public class SimulationTest {
                     }*/
                     //System.out.println(System.currentTimeMillis() - simulationBeginTime);
 
-                    //scheduler.shutdown();
+
+
 
                     while(true) {
-                        if (ConnectionPool.dataSource.getNumActive() == 0 && ConnectionPool.dataSource.getNumIdle() == 0) {
+                        if (ConnectionPool.dataSource.getNumActive() == 0) {
+                            executorService.shutdown();
                             break;
                         }
                         Thread.sleep(100);
+                        //System.out.println("not yet");
                     }
 
                     //System.out.println(System.currentTimeMillis() - simulationBeginTime);
@@ -116,7 +119,9 @@ public class SimulationTest {
                     System.out.println("Total sqls: " + Statistic.sqlSize);
                     System.out.println("Total response time: " + Statistic.totalResponseTime + "ms");
                     System.out.println("Avg response time: " + ((Statistic.totalResponseTime * 1.0) / Statistic.sqlSize ) + "ms");
-                    Thread.sleep(10000);
+                    Thread.sleep(1000);
+
+                    connectionPool.close();
                 }
             }
         }
@@ -203,7 +208,7 @@ public class SimulationTest {
                         long endTime = System.currentTimeMillis();
 
                         Statistic.totalResponseTime += (endTime - startTime);
-                        //System.out.println("responseTime: " + (endTime - startTime));
+                        //System.out.println("endTime: " + (endTime - simulationBeginTime));
                     }
                     if (statement != null) {
                         statement.close();

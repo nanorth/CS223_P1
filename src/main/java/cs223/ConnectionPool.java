@@ -37,6 +37,8 @@ public class ConnectionPool {
     public void close() throws SQLException {
         if (dataSource != null) {
             dataSource.close();
+            instance = null;
+            dataSource = null;
         }
     }
 }
