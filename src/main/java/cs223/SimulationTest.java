@@ -20,18 +20,6 @@ public class SimulationTest {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, SQLException {
         Settings.switch_to_high_concurrency();
-        /*ArrayList<String> sqlStatements = new ArrayList<String>();
-        sqlStatements.add("SET statement_timeout = 0;");
-        sqlStatements.add("SET lock_timeout = 0;");
-        sqlStatements.add("SET idle_in_transaction_session_timeout = 0;");
-        sqlStatements.add("SET client_encoding = 'UTF8';");
-        sqlStatements.add("SET standard_conforming_strings = on;");
-        sqlStatements.add("SET check_function_bodies = false;");
-        sqlStatements.add("SET client_min_messages = warning;");
-        sqlStatements.add("SET row_security = off;");
-        sqlStatements.add("SET search_path = public, pg_catalog;");*/
-
-
 
         SQLDataLoader.LoadSQL(Settings.OBSERVATION_DATASET_URL, sqlMap);
         SQLDataLoader.LoadSQL(Settings.SEMANTIC_DATASET_URL, sqlMap);
@@ -42,7 +30,7 @@ public class SimulationTest {
             Statistic.sqlSize += curSQL.size();
         }
 
-        System.out.println(Statistic.sqlSize);
+        System.out.println("sqlSize: " + Statistic.sqlSize);
         for (int i = 0; i < Settings.LEVELS.size(); i++) {
             System.out.println("Isolation Level" + Settings.LEVELS.get(i));
             for (int j = 0; j < Settings.TRANSACTION_SIZE.size(); j++) {
@@ -69,48 +57,49 @@ public class SimulationTest {
                     //executeSql(sqlStatements, connectionPool, url, user, password);
 
                     int taskCount = (int)Settings.SIMULATION_LENGTH / Settings.PERIOD;
-                    int ThreadPoolSize = Settings.MPLS.get(k);
-                    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(ThreadPoolSize);
+                    int ThreadPoolSize = taskCount;
+                    //ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(ThreadPoolSize);
                     QueryScheduler[] schedulerList = new QueryScheduler[ThreadPoolSize];
-                    ScheduledFuture<?>[] scheduledFutures = new ScheduledFuture[ThreadPoolSize];
-                    CountDownLatch latch = new CountDownLatch(taskCount);
+                    //ScheduledFuture<?>[] scheduledFutures = new ScheduledFuture[ThreadPoolSize];
+                    //CountDownLatch latch = new CountDownLatch(taskCount);
                     long simulationBeginTime = System.currentTimeMillis();
-
-                    for (int temp = 0; temp < ThreadPoolSize; temp++) {
+                    ExecutorService executorService = Executors.newFixedThreadPool(Settings.MPLS.get(k) + 5);
+                    for (int temp = 0; temp < taskCount; temp++) {
                         //long curSimulationBeginTime = System.currentTimeMillis();
                         schedulerList[temp] = new QueryScheduler(connectionPool,
                                 simulationBeginTime, Settings.TRANSACTION_SIZE.get(j), Settings.LEVELS.get(i),
                                 temp * Settings.PERIOD, ThreadPoolSize);
                         int finalTemp = temp;
-                        scheduledFutures[temp] = scheduler.scheduleAtFixedRate(
+                        executorService.execute(schedulerList[finalTemp]);
+                        /*scheduledFutures[temp] = scheduler.scheduleAtFixedRate(
                                 () -> {
                                     schedulerList[finalTemp].run();
                                     latch.countDown();
-                                }, 0, Settings.PERIOD * ThreadPoolSize, TimeUnit.MILLISECONDS);
-                        //Thread.sleep(Settings.PERIOD);
+                                }, 0, Settings.PERIOD * ThreadPoolSize, TimeUnit.MILLISECONDS);*/
+                        Thread.sleep(Settings.PERIOD);
                     }
 
-                    System.out.println(System.currentTimeMillis() - simulationBeginTime);
-                    try {
+                    //System.out.println(System.currentTimeMillis() - simulationBeginTime);
+                   /* try {
                         latch.await();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     for (ScheduledFuture<?> scheduledFuture : scheduledFutures) {
                         scheduledFuture.cancel(true);
-                    }
-                    System.out.println(System.currentTimeMillis() - simulationBeginTime);
+                    }*/
+                    //System.out.println(System.currentTimeMillis() - simulationBeginTime);
 
-                    scheduler.shutdown();
+                    //scheduler.shutdown();
 
                     while(true) {
-                        if (ConnectionPool.dataSource.getNumActive() == 0) {
+                        if (ConnectionPool.dataSource.getNumActive() == 0 && ConnectionPool.dataSource.getNumIdle() == 0) {
                             break;
                         }
                         Thread.sleep(100);
                     }
 
-                    System.out.println(System.currentTimeMillis() - simulationBeginTime);
+                    //System.out.println(System.currentTimeMillis() - simulationBeginTime);
                     //for test
                     /*List<String> test = new ArrayList<>();
                     test.add("SELECT ci.INFRASTRUCTURE_ID \n" +
