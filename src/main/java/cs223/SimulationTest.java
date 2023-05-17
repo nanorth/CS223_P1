@@ -17,6 +17,7 @@ public class SimulationTest {
 
     public static HashMap<Long, List<String>> sqlMap = new HashMap<>();
     public static List<String> sqlString;
+    public static int finishedTask;
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, SQLException {
         Settings.switch_to_high_concurrency();
@@ -26,9 +27,12 @@ public class SimulationTest {
         SQLDataLoader.LoadQueries(Settings.QUERY_DATA_URL, sqlMap);
 
 
-        for (List<String> curSQL : sqlMap.values()) {
-            Statistic.sqlSize += curSQL.size();
+        for (long i = 0; i < Settings.SIMULATION_LENGTH; i++) {
+            if (sqlMap.containsKey(i))
+                Statistic.sqlSize += sqlMap.get(i).size();
         }
+
+
 
         System.out.println("sqlSize: " + Statistic.sqlSize);
         for (int i = 0; i < Settings.LEVELS.size(); i++) {
@@ -58,12 +62,19 @@ public class SimulationTest {
 
                     int taskCount = (int)Settings.SIMULATION_LENGTH / Settings.PERIOD;
                     int ThreadPoolSize = taskCount;
+                    finishedTask = taskCount;
                     //ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(ThreadPoolSize);
                     QueryScheduler[] schedulerList = new QueryScheduler[ThreadPoolSize];
                     //ScheduledFuture<?>[] scheduledFutures = new ScheduledFuture[ThreadPoolSize];
                     //CountDownLatch latch = new CountDownLatch(taskCount);
                     long simulationBeginTime = System.currentTimeMillis();
-                    ExecutorService executorService = Executors.newFixedThreadPool(Settings.MPLS.get(k) + 5);
+
+                    /*QueryScheduler scheduler = new QueryScheduler(connectionPool,
+                            simulationBeginTime, Settings.TRANSACTION_SIZE.get(j), Settings.LEVELS.get(i),
+                             0, ThreadPoolSize);
+                    scheduler.run();*/
+
+                    ExecutorService executorService = Executors.newFixedThreadPool(ThreadPoolSize + 5);
                     for (int temp = 0; temp < taskCount; temp++) {
                         //long curSimulationBeginTime = System.currentTimeMillis();
                         schedulerList[temp] = new QueryScheduler(connectionPool,
@@ -91,13 +102,13 @@ public class SimulationTest {
                     //System.out.println(System.currentTimeMillis() - simulationBeginTime);
 
 
-
-
+                    int counter = 0;
                     while(true) {
-                        if (ConnectionPool.dataSource.getNumActive() == 0) {
+                        if (((ThreadPoolExecutor) executorService).getActiveCount() == 0) {
                             executorService.shutdown();
                             break;
                         }
+                        //System.out.println("current waiting: " + ((ThreadPoolExecutor) executorService).getActiveCount());
                         Thread.sleep(100);
                         //System.out.println("not yet");
                     }
@@ -191,7 +202,7 @@ public class SimulationTest {
                 }
 
                 connection.commit();
-
+                finishedTask--;
             } catch (SQLException e) {
                 try {
                     if (connection != null) {

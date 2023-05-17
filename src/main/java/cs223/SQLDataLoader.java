@@ -30,15 +30,18 @@ public class SQLDataLoader {
                     }
                     long timestamp = java.sql.Timestamp.valueOf(timestampString).getTime();
                     timestamp = (timestamp - java.sql.Timestamp.valueOf(Settings.OBSERVATION_START_DATE).getTime()) / Settings.TIME_SCALE_RATIO;
-                    if (!sqlMap.containsKey(timestamp)) {
-                        sqlMap.put(timestamp, new ArrayList<>());
+                    if (timestamp < Settings.SIMULATION_LENGTH) {
+                        if (!sqlMap.containsKey(timestamp)) {
+                            sqlMap.put(timestamp, new ArrayList<>());
+                        }
+                        List<String> sqls = sqlMap.get(timestamp);
+                        sqls.add(line);
                     }
-                    List<String> sqls = sqlMap.get(timestamp);
-                    sqls.add(line);
-                    if (timestamp > Settings.SIMULATION_LENGTH) {
+
+                    /*if (timestamp > Settings.SIMULATION_LENGTH) {
                         if (counter++ > 100)
                             break;
-                    }
+                    }*/
                 }
             }
         } catch (IOException e) {
@@ -73,6 +76,7 @@ public class SQLDataLoader {
             String line;
             String sqlString = "";
             int counter = 0;
+            int total = 0;
             while ((line = br.readLine()) != null) {
                 sqlString += line + " ";
                 if (line.charAt(0) == '"') {
@@ -90,12 +94,16 @@ public class SQLDataLoader {
                         sqlMap.put(timestamp, sqlList);
                     }
                     sqlString = "";
+                    total++;
                     if (timestamp > Settings.SIMULATION_LENGTH) {
                         if (counter++ > 10)
                             break;
                     }
+
+
                 }
             }
+            System.out.println(total);
         } catch (IOException e) {
             e.printStackTrace();
         }
