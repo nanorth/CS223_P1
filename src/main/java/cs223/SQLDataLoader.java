@@ -38,10 +38,6 @@ public class SQLDataLoader {
                         sqls.add(line);
                     }
 
-                    /*if (timestamp > Settings.SIMULATION_LENGTH) {
-                        if (counter++ > 100)
-                            break;
-                    }*/
                 }
             }
         } catch (IOException e) {

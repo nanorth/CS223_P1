@@ -17,10 +17,10 @@ public class SimulationTest {
 
     public static HashMap<Long, List<String>> sqlMap = new HashMap<>();
     public static List<String> sqlString;
-    public static int finishedTask;
+
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, SQLException {
-        Settings.switch_to_high_concurrency();
+        //Settings.switch_to_high_concurrency();
 
         SQLDataLoader.LoadSQL(Settings.OBSERVATION_DATASET_URL, sqlMap);
         SQLDataLoader.LoadSQL(Settings.SEMANTIC_DATASET_URL, sqlMap);
@@ -62,7 +62,7 @@ public class SimulationTest {
 
                     int taskCount = (int)Settings.SIMULATION_LENGTH / Settings.PERIOD;
                     int ThreadPoolSize = taskCount;
-                    finishedTask = taskCount;
+
                     //ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(ThreadPoolSize);
                     QueryScheduler[] schedulerList = new QueryScheduler[ThreadPoolSize];
                     //ScheduledFuture<?>[] scheduledFutures = new ScheduledFuture[ThreadPoolSize];
@@ -82,23 +82,11 @@ public class SimulationTest {
                                 temp * Settings.PERIOD, ThreadPoolSize);
                         int finalTemp = temp;
                         executorService.execute(schedulerList[finalTemp]);
-                        /*scheduledFutures[temp] = scheduler.scheduleAtFixedRate(
-                                () -> {
-                                    schedulerList[finalTemp].run();
-                                    latch.countDown();
-                                }, 0, Settings.PERIOD * ThreadPoolSize, TimeUnit.MILLISECONDS);*/
                         Thread.sleep(Settings.PERIOD);
                     }
 
                     //System.out.println(System.currentTimeMillis() - simulationBeginTime);
-                   /* try {
-                        latch.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    for (ScheduledFuture<?> scheduledFuture : scheduledFutures) {
-                        scheduledFuture.cancel(true);
-                    }*/
+
                     //System.out.println(System.currentTimeMillis() - simulationBeginTime);
 
 
@@ -113,13 +101,6 @@ public class SimulationTest {
                         //System.out.println("not yet");
                     }
 
-                    //System.out.println(System.currentTimeMillis() - simulationBeginTime);
-                    //for test
-                    /*List<String> test = new ArrayList<>();
-                    test.add("SELECT ci.INFRASTRUCTURE_ID \n" +
-                            "FROM SENSOR sen, COVERAGE_INFRASTRUCTURE ci \n" +
-                            "WHERE sen.id=ci.SENSOR_ID AND sen.id='78dd9081_14a5_41eb_8632_14e45a6b1e57'");
-                    executeSql(test, connectionPool, url, user, password);*/
 
                     long simulationEndTime = System.currentTimeMillis();
                     long totalTime = simulationEndTime - simulationBeginTime;
@@ -202,7 +183,6 @@ public class SimulationTest {
                 }
 
                 connection.commit();
-                finishedTask--;
             } catch (SQLException e) {
                 try {
                     if (connection != null) {
@@ -259,20 +239,6 @@ public class SimulationTest {
             }
         }
     }
-    //TODO: following code is an example for detecting response time
-    /*List<Long> waitTimes = new ArrayList<>();
-    for (int i = 0; i < taskCount; i++) {
-        long startTime = System.currentTimeMillis();
-        Connection conn = dataSource.getConnection();
-        long endTime = System.currentTimeMillis();
-        waitTimes.add(endTime - startTime);
-        // Execute SQL
-        // ...
-        conn.close();
-    }
-    double avgWaitTime = waitTimes.stream().mapToLong(Long::longValue).average().orElse(Double.NaN);*/
-
-
 
 }
 
